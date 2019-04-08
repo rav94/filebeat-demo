@@ -1,0 +1,19 @@
+[Unit]
+Description=Filebeat Docker Service
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=root
+TimeoutStartSec=0
+Restart=on-failure
+ExecStartPre=-/usr/bin/docker kill filebeat
+ExecStartPre=-/usr/bin/docker rm -f filebeat
+ExecStartPre=-/usr/bin/docker pull ${YOUR_FILEBEAT_DOCKER_IMAGE}:latest
+ExecStartPre=-/bin/sh -c "/bin/docker rmi $(docker images --quiet --filter 'dangling=true')"
+ExecStart=/usr/bin/docker run -v '/var/lib/docker/containers:/usr/share/dockerlogs/data:ro' -v '/var/run/docker.sock:/var/run/docker.sock' --name filebeat ${YOUR_FILEBEAT_DOCKER_IMAGE}:latest
+ExecStop=/usr/bin/docker stop filebeat
+
+[Install]
+WantedBy=multi-user.target
